@@ -1,0 +1,16 @@
+📟 LA5ZUA-SmartGarage – Pinoversikt
+--------------------------------------------------------
+| Komponent         | ESP32-pin | Kommentar                   |
+|-------------------|------------|-----------------------------|
+| Rele ÅPNE         | GPIO26     | Aktiv LOW                   |
+| Rele LUKKE        | GPIO27     | Aktiv LOW                   |
+| Rele UTELYS       | GPIO33     | Aktiv LOW                   |
+| LM393 Lyssensor   | GPIO19     | DO-utgang, LOW = mørkt      |
+| DHT22 Sensor      | GPIO21     | Data (10kΩ pull-up til 3.3V)|
+| Bryter (Clipper)  | GPIO17     | Til GND, aktiv LOW          |
+| Soil Sensor       | GPIO32     | Analog inngang (valgfri)    |
+| 3.3V              | -          | Strøm til sensorer          |
+| 5V                | -          | Strøm til relekort          |
+| GND               | -          | Felles jord                 |
+--------------------------------------------------------
+🧠 Releer er konfigurert som aktiv LOW (RELAY_ACTIVE_LOW = true)

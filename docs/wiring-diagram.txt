@@ -1,0 +1,44 @@
+📘 LA5ZUA-SmartGarage – Koblingsskjema (tekstversjon)
+--------------------------------------------------------
+
+ESP32 Dev Module (3.3V logikk)
+
+🧩 Releer (aktiv LOW):
+ - RELAY_OPEN_PIN   → GPIO26
+ - RELAY_CLOSE_PIN  → GPIO27
+ - RELAY_LIGHT_PIN  → GPIO33
+ - Felles 5V og GND til relekort
+ - JD-VCC-jumper må være satt for aktiv LOW
+
+💡 LM393 Lys-sensor:
+ - DO → GPIO19
+ - VCC → 3.3V
+ - GND → GND
+ - LM393_LOW_IS_DARK = true  → DO = LOW = mørkt (lyset aktiveres)
+
+🌡️ DHT22 Sensor:
+ - DATA → GPIO21
+ - VCC  → 3.3V
+ - GND  → GND
+ - 10 kΩ motstand mellom DATA og 3.3V (pull-up)
+
+🔘 Clipper-bryter:
+ - Bryter → GPIO17
+ - Koble bryter til GND
+ - Internt pull-up aktivert i koden (aktiv LOW)
+
+🌱 Soil fukt-sensor (valgfri analog inngang):
+ - Signal → GPIO32
+ - VCC → 3.3V
+ - GND → GND
+
+⚡ Strømforsyning:
+ - ESP32 via USB eller ekstern 5V
+ - Relekort får 5V (min. 2A anbefales)
+ - Felles GND mellom alle moduler
+
+--------------------------------------------------------
+📎 Tips:
+- Alle sensorer og ESP32 deler GND.
+- DHT22 og LM393 skal ha 3.3V, ikke 5V.
+- Sørg for solid jordforbindelse mellom moduler.
