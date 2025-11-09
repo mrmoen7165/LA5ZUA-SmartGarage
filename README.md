@@ -66,9 +66,9 @@ en samling åpne, ESP32-baserte prosjekter utviklet av Mrmoen (LA5ZUA)
 for automatisering, sensormåling og smart-styring i hverdagen.
 
 📅 Versjon og status
-Gjeldende firmware: v1.1.3
+Gjeldende firmware: v1.1.8
 
-Sist oppdatert: 08.11.2025
+Sist oppdatert: 09.11.2025
 
 Se firmware/changelog.txt for detaljer.
 

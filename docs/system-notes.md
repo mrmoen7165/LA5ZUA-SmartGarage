@@ -42,6 +42,6 @@ Sensorer og innganger:
 
 ---
 
-📅 Sist oppdatert: 08.11.2025  
-📖 Versjon: v1.1.3  
+📅 Sist oppdatert: 09.11.2025  
+📖 Versjon: v1.1.8  
 © 2025 LA5ZUA Tech DIY Series – SmartGarage

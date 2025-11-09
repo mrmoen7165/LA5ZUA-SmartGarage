@@ -13,5 +13,5 @@ Legg det inn her som `wiring-diagram.png` slik at GitHub viser det i dokumentasj
 
 ---
 
-📅 Sist oppdatert: 08.11.2025  
+📅 Sist oppdatert: 09.11.2025  
 © 2025 LA5ZUA Tech DIY Series – SmartGarage
