@@ -1,13 +1,118 @@
 📦 LA5ZUA-SmartGarage – Firmware Changelog
 Del av LA5ZUA Tech DIY Series
 ------------------------------------------------------
+© 2025 LA5ZUA Tech DIY Series – SmartGarage
 
 🧭 Format:
 Versjon – Dato – Endringer / Notater
 
-------------------------------------------------------
+
+
+
+v1.1.7 – 09.11.2025
+
+• Ny toppseksjon med LA5ZUA-tekstlogo (erstatter bilde)
+• Glødende grønn GitHub-lenke med hover-effekt
+• Forbedret CSS-layout for header og OTA-knapp
+• Rød OTA-knapp med forbedret styling og statusindikasjon
+• “Blink”-effekt ved vellykket OTA-oppdatering
+• Forbedret spacing og layout på knapper
+• Stabilitetsforbedring i OTA-håndtering
+
+v1.1.6 – 09.11.2025
+
+• OTA-system fullført og testet
+• ESP sjekker GitHub automatisk for ny firmware
+• OTA-knapp i webgrensesnitt med visuell fremdrift
+• Oppdatert statusfelt (tid, Wi-Fi, RSSI, IP, uptime)
+• Forbedret feilkontroll ved NTP-tilkobling
+• Viser aktiv firmwareversjon i UI
+
+v1.1.5 – 08.11.2025
+
+• UI-forbedringer: justert farger, kontraster og lysindikatorer
+• Bedre lesbarhet på LED-panel
+• Auto/manuell-knapper for port og lys i ny layout
+• DHT-sensor stabilitetsforbedring (unngår reboot ved feil lesing)
+• LM393 flyttet til 3.3 V for bedre kompatibilitet
+• Mindre justering av debounce og rele-kontroll
+
+v1.1.4 – 08.11.2025
+
+• Nytt web-UI-design med mørk stil og kortbasert layout
+• Lysmodus-indikator og LM393-statusfelt
+• DHT22-temperatur og fuktighet integrert i kortvisning
+• Forbedret statusindikasjon for port (Åpen/Stengt/Beveger seg)
+• Flere visuelle detaljer lagt til: “chip”-knapper og lysende rammer
+
+v1.1.3 – 08.11.2025
+
+• Implementert full OTA-støtte (GitHub auto-update)
+• Opprettet firmware/-struktur med changelog og README
+• Justert pin-oppsett for DHT og LM393 for stabil drift
+• Flyttet LM393 fra 5V til 3.3V for korrekt logikknivå
+• Bekreftet felles GND og 5V-kobling på relemodul
+• Kontrollert rele-retning og aktiv LOW-konfigurasjon
+• Rettet feil i setRelayRaw() og debouncing
+• Oppdatert dokumentasjon for OTA og versjonshåndtering
+• Klargjort prosjekt for første offentlig GitHub-release
+• Siste intern test før v1.2.0 (med MQTT og sensordata)
+
+v1.1.2 – 05.11.2025
+
+• Oppdatert prosjektstruktur: /src, /firmware, /assets, /docs
+• Integrert automatisk GitHub OTA-system
+• Lagt til versjonssjekk og OTA-autostart ved oppstart
+• Nytt filnavn: LA5ZUA-SmartGarage
+• Del av LA5ZUA Tech DIY Series #2
+
+v1.1.1 – 01.11.2025
+
+• Forberedt OTA (Over-The-Air) oppdateringssystem
+• Bygd første firmware/-mappe med version.txt og latest.bin
+• Oppdatert WiFi-init med fallback og statuslogging
+• Testet binær eksport og versjonskontroll
+
+v1.1.0 – 25.10.2025
+
+• Fullt aktiv LOW-oppsett på alle releer
+• Konsolidert pin-konfigurasjon for klarhet
+• Dokumentert koblingsskjema for LM393, DHT22 og relemodul
+• Bedre stabilitet i webserver og oppdatert tidssonekode
+• Startet strukturering for GitHub-publisering (Tech DIY Series)
+
+v1.0.4 – 12.09.2025
+
+• Lagt til feilhåndtering for DHT-oppdateringer
+• Forhindret ESP32-reboot ved manglende sensorrespons
+• Ryddet opp i variabelnavn og tidskonstanter
+• Justert DIR_DEAD_TIME mellom releer
+
+v1.0.3 – 01.09.2025
+
+• Integrert LM393 for automatisk lysstyring
+• Justert lysfølsomhet og utelyslogikk
+• Oppdatert webserver med manuell lyskontroll
+• Mindre justeringer i HTML/CSS for nettgrensesnitt
+
+v1.0.2 – 26.08.2025
+
+• Forbedret nettgrensesnitt med statusindikatorer
+• Lagt til temperatur- og fuktavlesning på nettside
+• Separert runOpen() og runClose() for tydeligere styring
+• Felles 5V og GND lagt inn i dokumentasjon
+• Justert DHT22-data til 3.3V for stabilitet
+
+v1.0.1 – 18.08.2025
+
+• Rettet feil i rele-logikk (aktiv LOW justert)
+• Tidsstyrt lyslogikk: 16:00–08:00 aktivt lys
+• Debounce-funksjon lagt til for fysisk bryter
+• Implementert CLOSE_DELAY_TIME etter åpning
+• Bedre stabilitet i sensoravlesning
 
 v1.0.0 – 07.08.2025
+
 • Første fungerende prototype for garasjeportkontroll med ESP32
 • Grunnleggende rele-styring (åpne/lukke)
 • Fysisk bryter på pin 17, testet med aktiv LOW
@@ -16,81 +121,6 @@ v1.0.0 – 07.08.2025
 • Webserver lagt til med enkel statusvisning
 • Konfigurert WiFi og NTP for tidssynkronisering
 • Første versjon uten OTA
-
-------------------------------------------------------
-
-v1.0.1 – 18.08.2025
-• Rettet feil i rele-logikk (aktiv LOW justert)
-• Tidsstyrt lyslogikk: 16:00–08:00 aktivt lys
-• Debounce-funksjon lagt til for fysisk bryter
-• Implementert CLOSE_DELAY_TIME etter åpning
-• Bedre stabilitet i sensoravlesning
-
-------------------------------------------------------
-
-v1.0.2 – 26.08.2025
-• Forbedret nettgrensesnitt med statusindikatorer
-• Lagt til temperatur- og fuktavlesning på nettside
-• Separert runOpen() og runClose() for tydeligere styring
-• Felles 5V og GND lagt inn i dokumentasjon
-• Justert DHT22-data til 3.3V for stabilitet
-
-------------------------------------------------------
-
-v1.0.3 – 01.09.2025
-• Integrert LM393 for automatisk lysstyring
-• Justert lysfølsomhet og utelyslogikk
-• Oppdatert webserver med manuell lyskontroll
-• Mindre justeringer i HTML/CSS for nettgrensesnitt
-
-------------------------------------------------------
-
-v1.0.4 – 12.09.2025
-• Lagt til feilhåndtering for DHT-oppdateringer
-• Forhindret ESP32-reboot ved manglende sensorrespons
-• Ryddet opp i variabelnavn og tidskonstanter
-• Justert DIR_DEAD_TIME mellom releer
-
-------------------------------------------------------
-
-v1.1.0 – 25.10.2025
-• Fullt aktiv LOW-oppsett på alle releer
-• Konsolidert pin-konfigurasjon for klarhet
-• Dokumentert koblingsskjema for LM393, DHT22 og relemodul
-• Bedre stabilitet i webserver og oppdatert tidssonekode
-• Startet strukturering for GitHub-publisering (Tech DIY Series)
-
-------------------------------------------------------
-
-v1.1.1 – 01.11.2025
-• Forberedt OTA (Over-The-Air) oppdateringssystem
-• Bygd første `firmware/`-mappe med version.txt og latest.bin
-• Oppdatert WiFi-init med fallback og statuslogging
-• Testet binær eksport og versjonskontroll
-
-------------------------------------------------------
-
-v1.1.2 – 05.11.2025
-• Oppdatert prosjektstruktur: /src, /firmware, /assets, /docs
-• Integrert automatisk GitHub OTA-system
-• Lagt til versjonssjekk og OTA-autostart ved oppstart
-• Nytt filnavn: `LA5ZUA-SmartGarage`
-• Del av *LA5ZUA Tech DIY Series #2*
-
-------------------------------------------------------
-
-v1.1.3 – 08.11.2025
-• Implementert full OTA-støtte (GitHub auto-update)
-• Opprettet `firmware/`-struktur med changelog og README
-• Justert pin-oppsett for DHT og LM393 for stabil drift
-• Flyttet LM393 fra 5V til 3.3V for korrekt logikknivå
-• Bekreftet felles GND og 5V-kobling på relemodul
-• Kontrollert rele-retning og aktiv LOW-konfigurasjon
-• Rettet feil i `setRelayRaw()` og debouncing
-• Oppdatert dokumentasjon for OTA og versjonshåndtering
-• Klargjort prosjekt for første offentlig GitHub-release
-• Siste intern test før v1.2.0 (med MQTT og sensordata)
-
 ------------------------------------------------------
 © 2025 LA5ZUA Tech DIY Series – SmartGarage
 Utviklet av Mrmoen (LA5ZUA)
