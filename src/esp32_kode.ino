@@ -5,9 +5,14 @@
  ************************************************************/
 
 #include <WiFi.h>
+#include <WiFiClientSecure.h>
 #include <WebServer.h>
 #include <time.h>
 #include <DHT.h>
+#include <HTTPClient.h>
+#include <HTTPUpdate.h>
+
+
 
 /*************** WiFi og NTP ***************/
 const char* WIFI_SSID      = "Moen";
@@ -44,6 +49,59 @@ volatile LightMode lightMode = LIGHT_AUTO;
 #define OPEN_RUN_TIME       7000
 #define CLOSE_RUN_TIME      7000
 #define DIR_DEAD_TIME        200
+
+/*************** OTA-konfig ***************/
+const char* versionURL = "https://raw.githubusercontent.com/mrmoen7165/LA5ZUA-SmartGarage/main/firmware/version.txt";
+const char* binURL     = "https://raw.githubusercontent.com/mrmoen7165/LA5ZUA-SmartGarage/main/firmware/latest.bin";
+const char* currentVersion = "1.1.7";   // Husk å oppdatere når du slipper ny firmware
+
+void checkForUpdates() {
+  WiFiClientSecure client;
+  client.setInsecure();  // 
+  HTTPClient http;
+
+  Serial.println("\n[OTA] Sjekker etter oppdatering...");
+
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("[OTA] Ikke tilkoblet WiFi. Hopper over OTA.");
+    return;
+  }
+
+  http.begin(client, versionURL);
+  int httpCode = http.GET();
+
+  if (httpCode == HTTP_CODE_OK) {
+    String newVersion = http.getString();
+    newVersion.trim();
+
+    Serial.printf("[OTA] Nyeste versjon på GitHub: %s\n", newVersion.c_str());
+    if (newVersion != currentVersion) {
+      Serial.println("[OTA] Ny versjon funnet! Starter oppdatering...");
+
+      t_httpUpdate_return ret = httpUpdate.update(client, binURL);
+
+      switch (ret) {
+        case HTTP_UPDATE_FAILED:
+          Serial.printf("[OTA] Oppdatering feilet: (%d): %s\n",
+                        httpUpdate.getLastError(),
+                        httpUpdate.getLastErrorString().c_str());
+          break;
+        case HTTP_UPDATE_NO_UPDATES:
+          Serial.println("[OTA] Ingen ny oppdatering tilgjengelig.");
+          break;
+        case HTTP_UPDATE_OK:
+          Serial.println("[OTA] Oppdatering fullført! Starter enheten på nytt...");
+          break;
+      }
+    } else {
+      Serial.println("[OTA] Ingen ny versjon tilgjengelig.");
+    }
+  } else {
+    Serial.printf("[OTA] Feil ved henting av versjon.txt. HTTP-kode: %d\n", httpCode);
+  }
+
+  http.end();
+}
 
 /*************** Lysstyring ***************/
 const unsigned long LIGHT_DEBOUNCE_MS      = 2000;
@@ -226,220 +284,341 @@ String indexHtml(){
 <!doctype html><html><head>
 <meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>Balle’s Man Cave — Control Center</title>
+
 <style>
+@keyframes blinkUpdated {
+  0%,100%{background:#0e2817;color:#aaffc3;}
+  50%{background:#22c55e;color:#fff;}
+}
+.pill.updated{animation:blinkUpdated 1s ease-in-out 3;}
+
 :root{
-  --bg:#0c1210; --panel:#111a16; --ink:#e7efe9;
-  --grid:#26372f; --line:#1a2923;
-  --green:#22c55e; --green-d:#15803d;
-  --blue:#2563eb;  --blue-d:#1e40af;
-  --red:#dc2626;   --red-d:#991b1b;
-  --amber:#f59e0b; --amber-d:#b45309;
-  --chip:#183a28;  --chip-b:#2c8a44;
+  --bg:#0c1210;--panel:#111a16;--ink:#e7efe9;
+  --grid:#26372f;--line:#1a2923;
+  --green:#22c55e;--green-d:#15803d;
+  --blue:#2563eb;--blue-d:#1e40af;
+  --red:#dc2626;--red-d:#991b1b;
+  --amber:#f59e0b;--amber-d:#b45309;
+  --chip:#183a28;--chip-b:#2c8a44;
 }
 *{box-sizing:border-box}
-body{margin:0;background:#0c1210;color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial}
-h1{max-width:1180px;margin:20px auto 8px;padding:0 12px}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Arial}
+/* === Header med logo, tittel og OTA-knapp === */
+.header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  max-width:1180px;
+  margin:20px auto 8px;
+  padding:0 12px;
+}
+.titleWrap {
+  display:flex;
+  align-items:center;
+  gap:14px;
+}
+
+.logoText {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #22c55e;
+  text-decoration: none;
+  text-shadow: 0 0 8px #22c55e, 0 0 12px rgba(34,197,94,.6);
+  letter-spacing: 1px;
+  transition: filter .2s, transform .1s, text-shadow .3s;
+}
+.logoText:hover {
+  filter: brightness(1.2);
+  text-shadow: 0 0 14px #22c55e, 0 0 24px #16a34a;
+  transform: scale(1.05);
+}
+.otaBox {
+  display:flex;
+  align-items:center;
+  gap:10px;
+}
+.otaBox .btn {
+  background:var(--red);
+  border-color:var(--red-d);
+  font-weight:600;
+  padding:8px 14px;
+}
+.otaBox .btn:hover {
+  filter:brightness(1.15);
+}
+
+/* Toppseksjon */
+h1{
+  max-width:1180px;
+  margin:20px auto 8px;
+  padding:0 12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+}
+.otaBox{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.otaBox .pill{
+  padding:3px 10px;
+  font-size:0.9rem;
+  font-weight:700;
+  border-radius:999px;
+  border:1px solid #2b3d34;
+  background:#0e1a15;
+  box-shadow:0 0 8px #0b2616 inset;
+}
+.otaBox .btn{
+  padding:6px 12px;
+  font-size:0.9rem;
+  border-radius:999px;
+  text-decoration:none;
+  color:#fff;
+  background:var(--red);
+  border:1px solid var(--red-d);
+  box-shadow:0 0 12px rgba(220,38,38,.4);
+  transition:filter .15s, transform .05s;
+}
+.otaBox .btn:hover{
+  filter:brightness(1.15);
+  transform:translateY(-1px);
+}
+
+/* Kort og grid */
 .wrap{max-width:1180px;margin:0 auto;padding:0 12px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;box-shadow:0 1px 0 #0a100e,0 0 24px #09120f inset;padding:14px;margin:12px 0}
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:14px;
+  box-shadow:0 1px 0 #0a100e,0 0 24px #09120f inset;
+  padding:14px;
+  margin:12px 0;
+}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
 .kv{display:flex;justify-content:space-between;border-bottom:1px dashed var(--grid);padding:6px 0}
 .pill{padding:2px 10px;border-radius:999px;border:1px solid #2b3d34;background:#0f1a16}
 .pill.good{background:#0e2817;border-color:#2e7a42}
 .pill.bad{background:#281313;border-color:#7a2e2e}
+
+/* Knappestiler */
 .btns{display:flex;gap:8px;flex-wrap:wrap}
 .btn{padding:10px 14px;border-radius:10px;text-decoration:none;color:#fff;display:inline-block;border:1px solid transparent;transition:filter .12s,transform .02s}
 .btn:active{transform:translateY(1px)}
-/* handling-knapper */
 .btn-open{background:var(--green);border-color:var(--green-d)}
-.btn-close{background:var(--blue); border-color:var(--blue-d)}
-.btn-stop{background:var(--red);  border-color:var(--red-d)}
-/* dynamiske tilstander: gul=progress, grønn=done */
+.btn-close{background:var(--blue);border-color:var(--blue-d)}
+.btn-stop{background:var(--red);border-color:var(--red-d)}
 .state-progress{background:var(--amber)!important;border-color:var(--amber-d)!important;color:#000!important}
 .state-done{background:var(--green)!important;border-color:var(--green-d)!important}
-
-/* ===== Mer synlige chip-knapper (modus) ===== */
 .btn-chip{
-  --bd:#34d399; --glow:#22c55e;
-  color:#eafff2; background:linear-gradient(#113322,#0c2419);
-  border:2px solid var(--bd); border-radius:999px;
-  padding:10px 16px; font-weight:700; letter-spacing:.2px;
-  box-shadow:0 0 0 1px #07140d inset, 0 1px 0 #0008, 0 0 12px rgba(34,197,94,.25);
-  text-decoration:none; transition:filter .12s, transform .06s, box-shadow .12s;
+  --bd:#34d399;--glow:#22c55e;color:#eafff2;background:linear-gradient(#113322,#0c2419);
+  border:2px solid var(--bd);border-radius:999px;padding:10px 16px;font-weight:700;letter-spacing:.2px;
+  box-shadow:0 0 0 1px #07140d inset,0 1px 0 #0008,0 0 12px rgba(34,197,94,.25);
+  text-decoration:none;transition:filter .12s,transform .06s,box-shadow .12s;
 }
-.btn-chip:hover{ filter:brightness(1.15); transform:translateY(-1px); }
-.btn-chip.active{
-  background:linear-gradient(#0f3a22,#0d2f1d);
-  border-color:#4ade80;
-  box-shadow:0 0 0 2px rgba(255,255,255,.08) inset, 0 0 18px var(--glow);
-}
-/* ============================================ */
+.btn-chip:hover{filter:brightness(1.15);transform:translateY(-1px);}
+.btn-chip.active{background:linear-gradient(#0f3a22,#0d2f1d);border-color:#4ade80;box-shadow:0 0 0 2px rgba(255,255,255,.08) inset,0 0 18px var(--glow);}
 
+/* LED-panel */
 .layout{display:grid;grid-template-columns:1fr 260px;gap:14px}
 .ledpanel{background:#0f1513;border:1px solid var(--line);border-radius:12px;padding:10px}
 .ledrow{display:flex;align-items:center;justify-content:space-between;border-bottom:1px dashed var(--grid);padding:7px 4px}
-.led{width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 1px #000 inset, 0 0 12px #000}
+.led{width:14px;height:14px;border-radius:50%;box-shadow:0 0 0 1px #000 inset,0 0 12px #000}
 .led.g{background:#32f28a;box-shadow:0 0 0 1px #124 inset,0 0 12px #32f28a}
 .led.r{background:#ff5252;box-shadow:0 0 0 1px #411 inset,0 0 12px #ff5252}
 .led.y{background:#ffd45a;box-shadow:0 0 0 1px #442 inset,0 0 12px #ffd45a}
 .led.o{opacity:.22}
-@media(max-width:1100px){ .layout{grid-template-columns:1fr} }
+@media(max-width:1100px){.layout{grid-template-columns:1fr}}
+/* 📱 Mobilvennlig justering for logo og OTA-knapp */
+@media(max-width:700px){
+  .header{
+    flex-direction:column;
+    align-items:flex-start;
+    gap:10px;
+  }
+  .otaBox{
+    align-self:flex-start;
+  }
+}
 </style>
 </head>
 <body>
-  <h1>Balle’s Man Cave — Control Center</h1>
-  <div class="wrap">
-    <div class="card">
-      <div class="grid">
-        <div class="kv"><b>Tid</b><span id="time">-</span></div>
-        <div class="kv"><b>Wi-Fi</b><span id="wifi" class="pill">-</span></div>
-        <div class="kv"><b>IP</b><span id="ip">-</span></div>
-        <div class="kv"><b>RSSI</b><span id="rssi">-</span></div>
-        <div class="kv"><b>Uptime</b><span id="uptime">-</span></div>
-      </div>
-    </div>
 
-    <div class="layout">
-      <div>
-        <div class="card">
-          <div class="grid">
-            <div class="kv"><b>Port</b><span id="gate" class="pill">-</span></div>
-            <div class="kv"><b>Balle gjær d du itj gidd</b><span id="out" class="pill">—</span></div>
-            <div class="kv"><b>Balle kvile sæ (18)</b><span id="in"  class="pill">—</span></div>
-            <div class="kv"><b>Utelys</b><span id="light" class="pill">-</span></div>
-            <div class="kv"><b>LM393 lys føler</b><span id="lmraw" class="pill">-</span></div>
-          </div>
+<!-- 🧭 Toppseksjon med LA5ZUA-tekst, tittel og OTA-knapp -->
+<div class="header">
+  <div class="titleWrap">
+    <a href="https://github.com/mrmoen7165/LA5ZUA-SmartGarage" target="_blank" class="logoText">LA5ZUA</a>
+    <h1>Balle’s Man Cave — Control Center</h1>
+  </div>
+  <div class="otaBox">
+    <span class="pill" id="version">v1.1.4</span>
+    <a id="otaBtn" href="javascript:runOTA()" class="btn">Oppdater OTA</a>
+  </div>
+</div>
 
-          <div style="height:10px"></div>
-
-          <div class="btns">
-            <div class="btns" style="margin-right:16px">
-              <b style="align-self:center">Port-modus:</b>
-              <a id="btnGateAuto"   class="btn-chip" href="/action/gate?mode=auto">Auto</a>
-              <a id="btnGateManual" class="btn-chip" href="/action/gate?mode=manual">Manuell</a>
-            </div>
-
-            <a id="btnOpen"  class="btn btn-open"  href="/action/open">Åpne</a>
-            <a id="btnClose" class="btn btn-close" href="/action/close">Lukk</a>
-            <a               class="btn btn-stop"  href="/action/stop">Stopp</a>
-
-            <div style="width:18px"></div>
-
-            <div class="btns">
-              <b style="align-self:center">Lys-modus:</b>
-            <a id="btnLightAuto" class="btn-chip" href="/action/light?mode=auto">Auto</a>
-            <a id="btnLightOn"   class="btn-chip" href="/action/light?mode=off">På</a>
-            <a id="btnLightOff"  class="btn-chip" href="/action/light?mode=on">Av</a>
-
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="grid">
-            <div class="kv"><b>Tempratur måler DHT22</b><span id="temp" class="pill">-</span></div>
-            <div class="kv"><b>Luftfukt</b><span id="hum" class="pill">-</span></div>
-            <div class="kv"><b>Jordfukt Måler</b><span id="soilraw" class="pill">-</span></div>
-            <div class="kv"><b>Jordfuktighet (%)</b><span id="soilpct" class="pill">-</span></div>
-          </div>
-        </div>
-      </div>
-
-      <!-- LED-panel til høyre -->
-      <div class="ledpanel">
-        <div class="ledrow"><span>Strøm på enhet</span><span class="led g" id="ledPower"></span></div>
-        <div class="ledrow"><span>Port Åpen</span>  <span class="led o" id="ledOpen"></span></div>
-        <div class="ledrow"><span>Port Stengt</span><span class="led o" id="ledClosed"></span></div>
-        <div class="ledrow"><span>Klipper Ute</span><span class="led o" id="ledOut"></span></div>
-        <div class="ledrow"><span>Klipper Inne</span><span class="led o" id="ledIn"></span></div>
-        <div class="ledrow"><span>Utelys AV</span> <span class="led o" id="ledLightOff"></span></div>
-        <div class="ledrow"><span>Utelys PÅ</span> <span class="led o" id="ledLightOn"></span></div>
-        <div class="ledrow"><span>Div ERROR</span> <span class="led o" id="ledErr"></span></div>
-      </div>
+<div class="wrap">
+  <div class="card">
+    <div class="grid">
+      <div class="kv"><b>Tid</b><span id="time">-</span></div>
+      <div class="kv"><b>Wi-Fi</b><span id="wifi" class="pill">-</span></div>
+      <div class="kv"><b>IP</b><span id="ip">-</span></div>
+      <div class="kv"><b>RSSI</b><span id="rssi">-</span></div>
+      <div class="kv"><b>Uptime</b><span id="uptime">-</span></div>
     </div>
   </div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <div class="grid">
+          <div class="kv"><b>Port</b><span id="gate" class="pill">-</span></div>
+          <div class="kv"><b>Balle gjær d du itj gidd</b><span id="out" class="pill">—</span></div>
+          <div class="kv"><b>Balle kvile sæ (18)</b><span id="in" class="pill">—</span></div>
+          <div class="kv"><b>Utelys</b><span id="light" class="pill">-</span></div>
+          <div class="kv"><b>LM393 lys føler</b><span id="lmraw" class="pill">-</span></div>
+        </div>
+
+        <div style="height:10px"></div>
+
+        <div class="btns">
+          <div class="btns" style="margin-right:16px">
+            <b style="align-self:center">Port-modus:</b>
+            <a id="btnGateAuto" class="btn-chip" href="/action/gate?mode=auto">Auto</a>
+            <a id="btnGateManual" class="btn-chip" href="/action/gate?mode=manual">Manuell</a>
+          </div>
+
+          <a id="btnOpen" class="btn btn-open" href="/action/open">Åpne</a>
+          <a id="btnClose" class="btn btn-close" href="/action/close">Lukk</a>
+          <a class="btn btn-stop" href="/action/stop">Stopp</a>
+
+          <div style="width:18px"></div>
+
+          <div class="btns">
+            <b style="align-self:center">Lys-modus:</b>
+            <a id="btnLightAuto" class="btn-chip" href="/action/light?mode=auto">Auto</a>
+            <a id="btnLightOn" class="btn-chip" href="/action/light?mode=off">På</a>
+            <a id="btnLightOff" class="btn-chip" href="/action/light?mode=on">Av</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="grid">
+          <div class="kv"><b>Temperatur måler DHT22</b><span id="temp" class="pill">-</span></div>
+          <div class="kv"><b>Luftfukt</b><span id="hum" class="pill">-</span></div>
+          <div class="kv"><b>Jordfukt Måler</b><span id="soilraw" class="pill">-</span></div>
+          <div class="kv"><b>Jordfuktighet (%)</b><span id="soilpct" class="pill">-</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ledpanel">
+      <div class="ledrow"><span>Strøm på enhet</span><span class="led g" id="ledPower"></span></div>
+      <div class="ledrow"><span>Port Åpen</span><span class="led o" id="ledOpen"></span></div>
+      <div class="ledrow"><span>Port Stengt</span><span class="led o" id="ledClosed"></span></div>
+      <div class="ledrow"><span>Klipper Ute</span><span class="led o" id="ledOut"></span></div>
+      <div class="ledrow"><span>Klipper Inne</span><span class="led o" id="ledIn"></span></div>
+      <div class="ledrow"><span>Utelys AV</span><span class="led o" id="ledLightOff"></span></div>
+      <div class="ledrow"><span>Utelys PÅ</span><span class="led o" id="ledLightOn"></span></div>
+      <div class="ledrow"><span>Div ERROR</span><span class="led o" id="ledErr"></span></div>
+    </div>
+  </div>
+</div>
 
 <script>
 const E=id=>document.getElementById(id);
 const S=(id,v)=>E(id).innerText=v;
-function setActive(id,on){ const el=E(id); if(!el) return; el.classList.toggle('active',!!on); }
-function pill(el,good){ el.classList.remove('good','bad'); if(good===true) el.classList.add('good'); if(good===false) el.classList.add('bad'); }
-function setLED(id,color){ E(id).className='led '+(color||'o'); }
 
-/* Gi Åpne/Lukk-knappene gul/grønn basert på state */
+function setActive(id,on){const el=E(id);if(!el)return;el.classList.toggle('active',!!on);}
+function pill(el,good){el.classList.remove('good','bad');if(good===true)el.classList.add('good');if(good===false)el.classList.add('bad');}
+function setLED(id,color){E(id).className='led '+(color||'o');}
+
 function reflectGateButtons(stateTxt){
   const opening=/ÅPNER/i.test(stateTxt);
   const closing=/LUKKER/i.test(stateTxt);
   const waiting=/VENTER/i.test(stateTxt);
   const openOk=/^ÅPEN$/i.test(stateTxt);
   const closedOk=/^STENGT$/i.test(stateTxt);
-  const bOpen=E('btnOpen'), bClose=E('btnClose');
+  const bOpen=E('btnOpen'),bClose=E('btnClose');
+  [bOpen,bClose].forEach(b=>{b.classList.remove('state-progress','state-done');});
+  if(opening){bOpen.classList.add('state-progress');}
+  else if(openOk){bOpen.classList.add('state-done');}
+  if(closing||waiting){bClose.classList.add('state-progress');}
+  else if(closedOk){bClose.classList.add('state-done');}
+}
 
-  [bOpen,bClose].forEach(b=>{ b.classList.remove('state-progress','state-done'); });
-
-  if (opening){ bOpen.classList.add('state-progress'); }
-  else if (openOk){ bOpen.classList.add('state-done'); }
-
-  if (closing || waiting){ bClose.classList.add('state-progress'); }
-  else if (closedOk){ bClose.classList.add('state-done'); }
+function runOTA(){
+  const btn=E('otaBtn');
+  btn.innerText='Oppdatering pågår...';
+  btn.style.filter='brightness(0.6)';
+  btn.style.pointerEvents='none';
+  fetch('/action/ota')
+  .then(res=>res.text())
+  .then(()=>{
+    btn.innerText='Oppdatering fullført ✅';
+    E('version').classList.add('updated');
+    setTimeout(()=>{
+      E('version').classList.remove('updated');
+      btn.innerText='Oppdater OTA';
+      btn.style.filter='';
+      btn.style.pointerEvents='';
+    },15000);
+  })
+  .catch(()=>{
+    btn.innerText='Feil ved OTA ❌';
+    setTimeout(()=>{
+      btn.innerText='Oppdater OTA';
+      btn.style.filter='';
+      btn.style.pointerEvents='';
+    },8000);
+  });
 }
 
 function reflectGateState(txt){
-  const isOpen   = /^ÅPEN$/i.test(txt);
-  const isClosed = /^STENGT$/i.test(txt);
-  const isWait   = /VENTER/i.test(txt);
-  const isUnk    = /UKJENT/i.test(txt);
-
-  const g=E('gate'); g.innerText=txt; pill(g, isOpen?true:isClosed?false:undefined);
+  const isOpen=/^ÅPEN$/i.test(txt);
+  const isClosed=/^STENGT$/i.test(txt);
+  const isWait=/VENTER/i.test(txt);
+  const isUnk=/UKJENT/i.test(txt);
+  const g=E('gate');g.innerText=txt;pill(g,isOpen?true:isClosed?false:undefined);
   reflectGateButtons(txt);
-
-  setLED('ledOpen',   isOpen   ? 'g' : isWait ? 'y' : 'o');
-  setLED('ledClosed', isClosed ? 'g' : 'o');
-  setLED('ledErr',    isUnk    ? 'r' : 'o');
+  setLED('ledOpen',isOpen?'g':isWait?'y':'o');
+  setLED('ledClosed',isClosed?'g':'o');
+  setLED('ledErr',isUnk?'r':'o');
 }
 
 async function refresh(){
   try{
-    const j = await (await fetch('/api/status')).json();
-
-    S('time', j.time);
-    S('ip', j.ip || '-'); S('rssi', j.rssi + ' dBm'); S('uptime', j.uptime);
-
-    const wifi=E('wifi'); wifi.innerText = j.wifi_connected ? 'Tilkoblet' : 'Frakoblet';
-    pill(wifi, j.wifi_connected); setLED('ledPower','g');
-
+    const j=await(await fetch('/api/status')).json();
+    S('time',j.time);
+    S('ip',j.ip||'-');S('rssi',j.rssi+' dBm');S('uptime',j.uptime);
+    const wifi=E('wifi');wifi.innerText=j.wifi_connected?'Tilkoblet':'Frakoblet';
+    pill(wifi,j.wifi_connected);setLED('ledPower','g');
     reflectGateState(j.gate_state);
-
-    const out=E('out'), inn=E('in');
-    out.innerText = j.clipper_out ? 'AKTIV' : '—';
-    inn.innerText = j.clipper_in  ? 'AKTIV' : '—';
-    pill(out, j.clipper_out); pill(inn, j.clipper_in);
-    setLED('ledOut', j.clipper_out ? 'g' : 'o');
-    setLED('ledIn',  j.clipper_in  ? 'g' : 'o');
-
-    // inverter visningen slik at nettsiden samsvarer med faktisk rele-status
-    const lightOn = !j.light_on;
-    const L = E('light'); L.innerText = lightOn ? 'PÅ' : 'AV';
-    pill(L, lightOn);
-    setLED('ledLightOn',  lightOn ? 'g' : 'o');
-    setLED('ledLightOff', lightOn ? 'o' : 'g');
-    
-    S('lmraw', j.lm393_raw);
-    S('temp', j.temp_c!==null ? j.temp_c.toFixed(1)+' °C':'-');
-    S('hum',  j.hum!==null    ? Math.round(j.hum)+' %':'-');
-    S('soilraw', j.soil_raw);
-    S('soilpct', j.soil_pct+' %');
-
-    setActive('btnGateAuto',   j.gate_mode===0);
-    setActive('btnGateManual', j.gate_mode===1);
-
-    // 🔄 inverter logikken for lys-knappene
-    setActive('btnLightAuto',  j.light_mode===0);
-    setActive('btnLightOn',    j.light_mode===2);
-    setActive('btnLightOff',   j.light_mode===1);
-
+    const out=E('out'),inn=E('in');
+    out.innerText=j.clipper_out?'AKTIV':'—';
+    inn.innerText=j.clipper_in?'AKTIV':'—';
+    pill(out,j.clipper_out);pill(inn,j.clipper_in);
+    setLED('ledOut',j.clipper_out?'g':'o');
+    setLED('ledIn',j.clipper_in?'g':'o');
+    const lightOn=!j.light_on;
+    const L=E('light');L.innerText=lightOn?'PÅ':'AV';
+    pill(L,lightOn);
+    setLED('ledLightOn',lightOn?'g':'o');
+    setLED('ledLightOff',lightOn?'o':'g');
+    S('lmraw',j.lm393_raw);
+    S('temp',j.temp_c!==null?j.temp_c.toFixed(1)+' °C':'-');
+    S('hum',j.hum!==null?Math.round(j.hum)+' %':'-');
+    S('soilraw',j.soil_raw);
+    S('soilpct',j.soil_pct+' %');
+    setActive('btnGateAuto',j.gate_mode===0);
+    setActive('btnGateManual',j.gate_mode===1);
+    setActive('btnLightAuto',j.light_mode===0);
+    setActive('btnLightOn',j.light_mode===2);
+    setActive('btnLightOff',j.light_mode===1);
   }catch(e){}
 }
-refresh(); setInterval(refresh, 1000);
+refresh();setInterval(refresh,1000);
 </script>
 </body></html>
 )HTML";
@@ -479,8 +658,10 @@ void handleApiStatus(){
   json += "\"soil_raw\":"+String(lastSoilRaw<0?0:lastSoilRaw)+",";
   json += "\"soil_pct\":"+String(lastSoilPct<0?0:lastSoilPct)+",";
   json += "\"gate_mode\":"+String((int)gateMode)+",";
-  json += "\"light_mode\":"+String((int)lightMode);
+  json += "\"light_mode\":"+String((int)lightMode)+",";
+  json += "\"version\":\""+String(currentVersion)+"\"";
   json += "}";
+
   server.send(200,"application/json; charset=utf-8",json);
 }
 
@@ -504,18 +685,16 @@ void setup() {
   // --- Start sensorer ---
   Serial.println("Starter DHT og sensorer...");
   dht.begin();
-
-  // Gi sensorer tid til å stabilisere seg
-  for (int i = 0; i < 10; i++) {
-    delay(100);
-    digitalRead(LM393_PIN);
-  }
+  for (int i = 0; i < 10; i++) { delay(100); digitalRead(LM393_PIN); }
   Serial.println("Sensorer stabilisert.");
 
   // --- Start nettverk ---
   connectWiFi();
   initTime();
   bootMillis = millis();
+
+  // 🔄 Sjekk for OTA-oppdatering ved oppstart
+  checkForUpdates();
 
   // --- Webserver-ruter ---
   server.on("/", []() { server.send(200, "text/html; charset=utf-8", indexHtml()); });
@@ -580,6 +759,14 @@ void setup() {
     server.send(303);
   });
 
+  // ⚙️ NY: OTA fra webgrensesnitt
+  server.on("/action/ota", []() {
+    server.send(200, "text/plain", "Starter OTA-oppdatering...");
+    Serial.println("[WEB] OTA-oppdatering startet fra webgrensesnitt!");
+    checkForUpdates();
+  });
+
+  // --- Start server ---
   server.begin();
   Serial.println("Webserver startet OK.\n");
 }
