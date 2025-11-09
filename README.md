@@ -61,7 +61,7 @@ Detaljerte instruksjoner finnes i firmware/README.md.
 Se også full tekstlig forklaring i docs/wiring-diagram.txt
 
 🧠 Om prosjektet
-LA5ZUA-SmartGarage er del 2 i LA5ZUA Tech DIY Series –
+LA5ZUA-SmartGarage er Prosjekt 2 i LA5ZUA Tech DIY Series –
 en samling åpne, ESP32-baserte prosjekter utviklet av Mrmoen (LA5ZUA)
 for automatisering, sensormåling og smart-styring i hverdagen.
 
@@ -88,5 +88,28 @@ neste prosjekt i serien, setter jeg også stor pris på en liten støtte.
 
 💡 *Hver krone går til komponenter, testing og utvikling av nye DIY-prosjekter.*
 
+👾 **Join the community:** [Echo Base Discord](https://discord.gg/6UgDFC8PNm)
+
+
 © 2025 LA5ZUA Tech DIY Series – SmartGarage
 Utviklet av Mrmoen (LA5ZUA)
+
+⚠️ Ansvarsfraskrivelse / Disclaimer
+
+⚙️ Bruk på eget ansvar.
+Dette prosjektet er utviklet som et hobbyprosjekt og deles for læring og inspirasjon.
+Jeg er ikke elektriker eller fagperson innen elektronikk – all bruk, bygging og testing skjer på eget ansvar.
+Sørg for å følge grunnleggende sikkerhet ved arbeid med strøm, og test alltid med lav spenning før permanent oppkobling.
+
+Koden, koblingsskjema og dokumentasjon leveres «som den er», uten noen form for garanti for funksjon, sikkerhet eller kompatibilitet.
+
+Bruk prosjektet trygt, lær noe nytt, og del gjerne forbedringer i fellesskapet!
+
+⚙️ Use at your own risk.
+This project is provided for educational and hobby purposes only.
+I am not a certified electrician — all building, wiring and testing is done at your own risk.
+Always ensure proper safety measures when working with electronics or mains power.
+
+The code and documentation are provided “as is”, without warranty of any kind.
+
+Stay safe, have fun, and share your ideas with the community!

@@ -40,8 +40,4 @@ Sensorer og innganger:
 - Automatisk OTA-sjekk daglig kl. 03:00
 - Ny webside med statusikoner og sanntidsoppdatering
 
----
-
-📅 Sist oppdatert: 09.11.2025  
-📖 Versjon: v1.1.8  
 © 2025 LA5ZUA Tech DIY Series – SmartGarage

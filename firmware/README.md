@@ -12,10 +12,6 @@ firmware/
 ├── version.txt ← versjonsnummer for OTA-sjekk
 └── README.md ← denne forklaringen
 
-yaml
-Kopier kode
-
----
 
 ## ⚙️ Hvordan oppdatere firmware
 
@@ -37,13 +33,10 @@ Kopier kode
 - Øk versjonsnummeret, f.eks.:
 1.0.0 → 1.0.1
 
-yaml
-Kopier kode
 
 ESP32 sammenligner dette tallet med `currentVersion` i koden.
 Hvis de er forskjellige, laster den automatisk ned den nye `latest.bin`.
 
----
 
 ### 3️⃣ Push til GitHub
 Når `latest.bin` og `version.txt` er klare:
@@ -55,10 +48,10 @@ git push
 🌐 OTA URL-er
 Disse URL-ene brukes i koden for å laste ned filene direkte:
 
-cpp
-Kopier kode
-const char* versionURL = "https://raw.githubusercontent.com/Mrmoen/LA5ZUA-SmartGarage/main/firmware/version.txt";
-const char* binURL     = "https://raw.githubusercontent.com/Mrmoen/LA5ZUA-SmartGarage/main/firmware/latest.bin";
+
+
+const char* versionURL = "https://raw.githubusercontent.com/mrmoen7165/LA5ZUA-SmartGarage/main/firmware/version.txt";
+const char* binURL     = "https://raw.githubusercontent.com/mrmoen7165/LA5ZUA-SmartGarage/main/firmware/latest.bin";
 🧠 Tips
 Hold version.txt og latest.bin synkronisert – samme versjon gjelder alltid.
 
@@ -69,11 +62,6 @@ Unngå mellomrom eller ekstra tekst i version.txt.
 Du kan legge til en changelog.txt her hvis du vil dokumentere endringer per versjon.
 
 📡 LA5ZUA Tech DIY Series – SmartGarage OTA
-
-yaml
-Kopier kode
-
----
 
 Denne README-fila gir deg alt du trenger i `firmware/`-mappa — ryddig og profesjonelt 👌  
 
